@@ -12,11 +12,19 @@ public class jumpCheckScript : MonoBehaviour
     }
  
     void OnTriggerStay2D(Collider2D other) {
-        if (other.CompareTag("Floor")) player.changeJmpState(true);
+        if (other.CompareTag("Floor")) {
+            player.isGrounded(true);
+        }
     }
 
     void OnTriggerExit2D(Collider2D other) {
-        player.changeJmpState(false);
+        player.isGrounded(false);
+    }
+
+    void OnTriggerEnter2D(Collider2D other) {
+        if (other.CompareTag("Floor")) {
+            player.resetJumps();
+        }
     }
 
 
