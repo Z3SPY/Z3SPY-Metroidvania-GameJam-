@@ -60,6 +60,7 @@ public class EnemyBasic : MonoBehaviour
     }
 
 
+    #region Basic Patrol
     void ChangeFacingDirection(string newDirection) {
 
         Vector3 newScale = baseScale;
@@ -127,4 +128,5 @@ public class EnemyBasic : MonoBehaviour
 
         return val;
     }
+    #endregion
 }

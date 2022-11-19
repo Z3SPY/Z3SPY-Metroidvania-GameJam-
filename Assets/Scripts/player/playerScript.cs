@@ -4,27 +4,40 @@ using UnityEngine;
 
 public class playerScript : MonoBehaviour
 {
-
-    [SerializeField] float x, y;
+    [Header ("Movement Settings")]
+    [SerializeField] float x;
+    [SerializeField] float y;
     [SerializeField] float _speed = 10f;
     [SerializeField] bool _canJump = false;
     [SerializeField] bool _isGrounded = true;
 
-    [SerializeField] Rigidbody2D RB2D;
-    [SerializeField] jumpCheckScript jmpChkScript;
-
+    [Header ("JumpVal Settings")]
     [SerializeField] int jmpNum;
     [SerializeField] int maxJump = 1;
     float yVelocity;
     float downVelocityMax = 2f;
     float velocity = 0.42f;
 
+    [Header ("Health Settings")]
+    public int playerHP;
+    [SerializeField] int maxHp = 5;
+    [SerializeField] bool _isDead = false;
+    [SerializeField] bool _invulnerable = false;
+    public float delayDmg = 1.25f; 
 
 
+    [Header ("References")]
+    [SerializeField] Rigidbody2D RB2D;
+    [SerializeField] jumpCheckScript jmpChkScript;
+    [SerializeField] KnockbackScript knockbackRef;
+
+
+    
     void Awake() {
 
         if (RB2D == null) RB2D = this.GetComponent<Rigidbody2D>();
         if (jmpChkScript == null) jmpChkScript = GameObject.Find("bottomCheck").GetComponent<jumpCheckScript>(); 
+        if (knockbackRef == null) knockbackRef = this.GetComponent<KnockbackScript>();
         
     }
 
@@ -32,6 +45,8 @@ public class playerScript : MonoBehaviour
     {
         jmpNum = maxJump;
         yVelocity = downVelocityMax;
+        playerHP = maxHp;
+
     }
 
     void Update()
@@ -54,6 +69,7 @@ public class playerScript : MonoBehaviour
         fixedGravity();
     }   
 
+#region jump and gravity 
     void fixedGravity() {
 
         if (_isGrounded == false) {
@@ -95,7 +111,45 @@ public class playerScript : MonoBehaviour
         jmpNum--;
         RB2D.AddForce(new Vector2(0, 15), ForceMode2D.Impulse);
     }
+#endregion
 
+#region health
+    void resetHp() {
+        playerHP = maxHp;
+    }
+
+    public void takeDamage(int dmg) {
+        playerHP -= dmg;
+        _invulnerable = true;
+        StartCoroutine(hitVulnerability());
+    }
+
+    void damageHandler() {
+        if (playerHP <= 0) {
+            _isDead = true;
+            Debug.Log("Dead");
+        }
+    }
+#endregion
+
+#region Collision
+    void OnTriggerEnter2D(Collider2D other) {
+            if (other.CompareTag("Enemy") && _invulnerable == false) {
+                takeDamage(1);
+                knockbackRef.PlayFeedback(other.gameObject);
+                RB2D.AddForce(new Vector2(0, 5), ForceMode2D.Impulse);
+            }
+        }
+
+    IEnumerator hitVulnerability () {
+        //While True
+        while (_invulnerable == true) {
+            yield return new WaitForSeconds(delayDmg);
+            _invulnerable = false;
+        } 
+    }
+
+#endregion
 
 
 
