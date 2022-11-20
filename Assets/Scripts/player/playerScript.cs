@@ -1,9 +1,14 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+
+
 public class playerScript : MonoBehaviour
 {
+
+    public string[] playerStates = {"Player-Idle", "Player-Attack", "Player-Walk"};
+
     [Header ("Movement Settings")]
     [SerializeField] float x;
     [SerializeField] float y;
@@ -26,10 +31,21 @@ public class playerScript : MonoBehaviour
     public float delayDmg = 1.25f; 
 
 
+    [Header ("Attack Settings")]
+    [SerializeField] Transform attackOrigin;
+    [SerializeField] Transform attackPos;
+    [SerializeField] bool _canAttack = true;
+
+    float attackRadius = 2f;
+    float attackDelay = .5f;
+
+
     [Header ("References")]
     [SerializeField] Rigidbody2D RB2D;
     [SerializeField] jumpCheckScript jmpChkScript;
     [SerializeField] KnockbackScript knockbackRef;
+    [SerializeField] SpriteRenderer srPlayer;
+    public playerAnimatorController animatorController;
 
 
     
@@ -38,7 +54,11 @@ public class playerScript : MonoBehaviour
         if (RB2D == null) RB2D = this.GetComponent<Rigidbody2D>();
         if (jmpChkScript == null) jmpChkScript = GameObject.Find("bottomCheck").GetComponent<jumpCheckScript>(); 
         if (knockbackRef == null) knockbackRef = this.GetComponent<KnockbackScript>();
-        
+        if (attackOrigin == null) attackOrigin = GameObject.Find("AttackOrigin").GetComponent<Transform>();
+        if (attackPos == null) attackPos = GameObject.Find("AttackOrigin").GetComponent<Transform>();
+        if (srPlayer == null) srPlayer = GameObject.Find("Player_visual").GetComponent<SpriteRenderer>();
+        if (animatorController == null) animatorController = this.GetComponent<playerAnimatorController>();
+
     }
 
     void Start()
@@ -50,18 +70,51 @@ public class playerScript : MonoBehaviour
     }
 
     void Update()
-    {
+    {   
+
 
         jmpCheck();
         //Movement
         x = Input.GetAxisRaw("Horizontal");
-        if (x != 0) 
-            transform.Translate(new Vector3(x, 0, 0) * Time.deltaTime * _speed);
+        y = Input.GetAxisRaw("Vertical");
 
+
+        if (_canAttack == true) {
+            if (x != 0) {
+            //Walk Animation
+            animatorController.ChangeAnimationState(playerStates[2]);
+            transform.Translate(new Vector3(x, 0, 0) * Time.deltaTime * _speed);
+            } else {
+            //Idle Animation
+                animatorController.ChangeAnimationState(playerStates[0]);
+            }
+        } else {
+            animatorController.ChangeAnimationState(playerStates[1]);
+        }
+        
+
+            
         if (Input.GetKeyDown(KeyCode.Space) && _canJump) {
             Jump();
         }
 
+        if (x == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 0); srPlayer.flipX = false;} 
+        if (x == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 180); srPlayer.flipX = true;}
+        if (y == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 90); }
+        if (y == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 270); }
+
+
+        if (Input.GetKeyDown(KeyCode.J)){
+            if (_canAttack) {
+                attack();
+            }
+        } 
+        
+
+    }
+
+    void canAttackChange() {
+        _canAttack = false;
     }
 
     //When Messing With Physics
@@ -131,6 +184,33 @@ public class playerScript : MonoBehaviour
         }
     }
 #endregion
+
+#region Attack
+    private void OnDrawGizmosSelected() {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(attackPos.position, attackRadius);
+    }
+
+    void attack() {
+        _canAttack = false;
+
+        foreach ( Collider2D collider in Physics2D.OverlapCircleAll(attackPos.position, attackRadius))
+        {
+            Debug.Log(collider.name);
+        } 
+
+        Invoke("changeAttack", attackDelay);
+
+    }
+
+    void changeAttack() {
+        _canAttack = true;
+    }
+
+    
+#endregion
+
+
 
 #region Collision
     void OnTriggerEnter2D(Collider2D other) {
