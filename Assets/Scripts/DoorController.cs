@@ -6,6 +6,8 @@ public class DoorController : MonoBehaviour
 {
 
     public int id;
+    [SerializeField] Transform point1, point2;
+    public float speedWhenOn = 0.75f, speenWhenOff = 2f;
 
     void Start()
     {
@@ -17,7 +19,7 @@ public class DoorController : MonoBehaviour
     private void OnDoorwayClose(int id) {
 
         if (id == this.id) {
-            LeanTween.moveLocalY(gameObject, -7.6f, 1f).setEaseInQuad();
+            LeanTween.moveLocalY(gameObject, point1.position.y, speedWhenOn).setEaseInQuad();
             Debug.Log("Closing");
         }
     }
@@ -25,7 +27,8 @@ public class DoorController : MonoBehaviour
     private void OnDoorwayOpen(int id) {
 
         if (id == this.id) {
-            LeanTween.moveLocalY(gameObject, 1.6f, 1f).setEaseOutQuad();
+            LeanTween.moveLocalY(gameObject, point2.position.y, speenWhenOff).setEaseOutQuad();
+            Debug.Log("Opening");
         }
     }
 }

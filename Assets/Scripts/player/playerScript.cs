@@ -7,7 +7,7 @@ using UnityEngine;
 public class playerScript : MonoBehaviour
 {
 
-    public string[] playerStates = {"Player-Idle", "Player-Attack", "Player-Walk"};
+    public string[] playerStates = {"Player-Idle", "Player-Attack", "Player-Walk", "Player-Jump", "Player-Air"};
 
     [Header ("Movement Settings")]
     [SerializeField] float x;
@@ -15,6 +15,9 @@ public class playerScript : MonoBehaviour
     [SerializeField] float _speed = 10f;
     [SerializeField] bool _canJump = false;
     [SerializeField] bool _isGrounded = true;
+    public bool autoWalkBool = false;
+    [SerializeField] bool _inTheAir = false;
+    public float walk = 0f;
 
     [Header ("JumpVal Settings")]
     [SerializeField] int jmpNum;
@@ -36,9 +39,12 @@ public class playerScript : MonoBehaviour
     [SerializeField] Transform attackPos;
     [SerializeField] bool _canAttack = true;
 
-    float attackRadius = 2f;
+    float attackRadius = 4f;
     float attackDelay = .5f;
 
+    public int attackDmg = 1;
+
+    
 
     [Header ("References")]
     [SerializeField] Rigidbody2D RB2D;
@@ -48,6 +54,7 @@ public class playerScript : MonoBehaviour
     public playerAnimatorController animatorController;
 
 
+
     
     void Awake() {
 
@@ -55,7 +62,7 @@ public class playerScript : MonoBehaviour
         if (jmpChkScript == null) jmpChkScript = GameObject.Find("bottomCheck").GetComponent<jumpCheckScript>(); 
         if (knockbackRef == null) knockbackRef = this.GetComponent<KnockbackScript>();
         if (attackOrigin == null) attackOrigin = GameObject.Find("AttackOrigin").GetComponent<Transform>();
-        if (attackPos == null) attackPos = GameObject.Find("AttackOrigin").GetComponent<Transform>();
+        if (attackPos == null) attackPos = GameObject.Find("AttackPoint").GetComponent<Transform>();
         if (srPlayer == null) srPlayer = GameObject.Find("Player_visual").GetComponent<SpriteRenderer>();
         if (animatorController == null) animatorController = this.GetComponent<playerAnimatorController>();
 
@@ -72,6 +79,9 @@ public class playerScript : MonoBehaviour
     void Update()
     {   
 
+        if (autoWalkBool == true) {
+            autoWalk(walk);
+        }
 
         jmpCheck();
         //Movement
@@ -79,36 +89,52 @@ public class playerScript : MonoBehaviour
         y = Input.GetAxisRaw("Vertical");
 
 
-        if (_canAttack == true) {
-            if (x != 0) {
-            //Walk Animation
-            animatorController.ChangeAnimationState(playerStates[2]);
-            transform.Translate(new Vector3(x, 0, 0) * Time.deltaTime * _speed);
+        if (autoWalkBool == false) {
+
+
+            //Walk Handler
+            if (_canAttack == true) {
+                if (x != 0) {
+                //Walk Animation
+                    if (_isGrounded == true ) { animatorController.ChangeAnimationState(playerStates[2]); } 
+                    transform.Translate(new Vector3(x, 0, 0) * Time.deltaTime * _speed);
+                } else {
+                //Idle Animation
+                    if (_isGrounded == true)
+                    animatorController.ChangeAnimationState(playerStates[0]);
+                }
             } else {
-            //Idle Animation
-                animatorController.ChangeAnimationState(playerStates[0]);
+                if (x != 0) {
+                    transform.Translate(new Vector3(x, 0, 0) * Time.deltaTime * _speed);
+                }
+                animatorController.ChangeAnimationState(playerStates[1]);
             }
-        } else {
-            animatorController.ChangeAnimationState(playerStates[1]);
-        }
-        
 
-            
-        if (Input.GetKeyDown(KeyCode.Space) && _canJump) {
-            Jump();
-        }
-
-        if (x == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 0); srPlayer.flipX = false;} 
-        if (x == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 180); srPlayer.flipX = true;}
-        if (y == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 90); }
-        if (y == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 270); }
-
-
-        if (Input.GetKeyDown(KeyCode.J)){
-            if (_canAttack) {
-                attack();
+            if (_canAttack == true && _isGrounded == false) {
+                animatorController.ChangeAnimationState(playerStates[4]);
             }
-        } 
+
+                
+            if (Input.GetKeyDown(KeyCode.Space) && _canJump) {
+
+                if (Input.GetKey(KeyCode.S) == false) {
+                    Jump();
+                }
+            }
+
+            if (x == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 0); srPlayer.flipX = false;} 
+            if (x == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 180); srPlayer.flipX = true;}
+            if (y == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 90); }
+            if (y == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 270); }
+
+
+            if (Input.GetKeyDown(KeyCode.J)){
+                if (_canAttack) {
+                    attack();
+                }
+            }
+       
+        }
         
 
     }
@@ -125,7 +151,7 @@ public class playerScript : MonoBehaviour
 #region jump and gravity 
     void fixedGravity() {
 
-        if (_isGrounded == false) {
+        if (_isGrounded == false ) {
             
             yVelocity += velocity;
             RB2D.AddForce(new Vector2(0, -yVelocity * Time.fixedDeltaTime), ForceMode2D.Impulse);
@@ -154,11 +180,16 @@ public class playerScript : MonoBehaviour
         _isGrounded = state;
     }
 
+    public void isAir(bool state) {
+        _inTheAir = state;
+    }
+
     public void resetJumps() {
         jmpNum = maxJump;
     }
 
     void Jump() {
+        animatorController.ChangeAnimationState(playerStates[3]);
         Debug.Log("Jump");
         _isGrounded = false;
         jmpNum--;
@@ -196,6 +227,9 @@ public class playerScript : MonoBehaviour
 
         foreach ( Collider2D collider in Physics2D.OverlapCircleAll(attackPos.position, attackRadius))
         {
+            if (collider.CompareTag("Enemy")) {
+                collider.GetComponent<EnemyBasic>().takeDamageEnemy(attackDmg);
+            }
             Debug.Log(collider.name);
         } 
 
@@ -219,6 +253,12 @@ public class playerScript : MonoBehaviour
                 knockbackRef.PlayFeedback(other.gameObject);
                 RB2D.AddForce(new Vector2(0, 5), ForceMode2D.Impulse);
             }
+
+            if (other.CompareTag("Room")) {
+                autoWalkBool = false;
+                walk = 0;
+                transitionHandler.instance.transitionOut();
+            }
         }
 
     IEnumerator hitVulnerability () {
@@ -231,6 +271,21 @@ public class playerScript : MonoBehaviour
 
 #endregion
 
+
+#region room State 
+    public void setAutoWalk() {
+
+        if (walk == 0 && autoWalkBool == false) {
+            walk = x;
+            autoWalkBool = true;
+        } 
+    }
+
+    public void autoWalk(float dir) {
+        animatorController.ChangeAnimationState(playerStates[2]);
+        transform.Translate(new Vector3(dir, 0, 0) * Time.deltaTime * _speed);
+    }
+#endregion
 
 
 }
