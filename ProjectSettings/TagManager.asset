@@ -8,6 +8,8 @@ TagManager:
   - Wall
   - Enemy
   - Interact
+  - Room
+  - Transition
   layers:
   - Default
   - TransparentFX
@@ -44,4 +46,10 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Tiles
+    uniqueID: 4075555341
+    locked: 0
+  - name: Player
+    uniqueID: 3302929659
     locked: 0

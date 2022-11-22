@@ -12,6 +12,8 @@ public class EnemyBasic : MonoBehaviour
     Rigidbody2D RB2D;
     [SerializeField] float moveSpeed = 5;
 
+    bool _isAlive = true;
+
 
     //Left And Right Postion
     const string LEFT = "left";
@@ -39,7 +41,11 @@ public class EnemyBasic : MonoBehaviour
 
     void Update()
     {
-        
+        if (_isAlive == true) {
+            this.gameObject.SetActive(true);
+        } else {
+            this.gameObject.SetActive(false);
+        }
     }
 
     void FixedUpdate() {
@@ -58,6 +64,19 @@ public class EnemyBasic : MonoBehaviour
             }
         }
     }
+
+
+    #region Enemy Take Player Damage
+        
+        public void takeDamageEnemy(int dmg) {
+            damageReference.TakeDamage(dmg);
+        }
+ 
+        public void Kill() {
+            _isAlive = false;
+        }
+
+    #endregion 
 
 
     #region Basic Patrol

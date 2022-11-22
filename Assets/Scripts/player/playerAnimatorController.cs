@@ -1,11 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
 public class playerAnimatorController : MonoBehaviour
 {
    Animator animator;  
-   public string currentState;
+   private string currentState;
 
 
    void Start() {
