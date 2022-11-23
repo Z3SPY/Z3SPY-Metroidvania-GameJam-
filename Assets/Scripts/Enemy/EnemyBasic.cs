@@ -13,6 +13,7 @@ public class EnemyBasic : MonoBehaviour
     [SerializeField] float moveSpeed = 5;
 
     bool _isAlive = true;
+    bool _exitRoom = false;
 
 
     //Left And Right Postion
@@ -20,6 +21,7 @@ public class EnemyBasic : MonoBehaviour
     const string RIGHT = "right";
 
     string facingDirection;
+    
 
     //Line Renderer
     [SerializeField] Transform castPos;
@@ -55,7 +57,7 @@ public class EnemyBasic : MonoBehaviour
         //Movement
         RB2D.velocity = new Vector2(vX, RB2D.velocity.y);
 
-        if (isHittingWall() || checkForEdge()) {
+        if (isHittingWall() || checkForEdge() ) {
 
             if (facingDirection == LEFT) {
                 ChangeFacingDirection(RIGHT);

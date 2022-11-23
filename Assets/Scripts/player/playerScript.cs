@@ -22,9 +22,17 @@ public class playerScript : MonoBehaviour
     [Header ("JumpVal Settings")]
     [SerializeField] int jmpNum;
     [SerializeField] int maxJump = 1;
+    [SerializeField] bool _pressedJump = false;
+    [SerializeField] bool _jumpAnimStart = false;
+    [SerializeField] float jumpForce = 15f;
+
     float yVelocity;
     float downVelocityMax = 2f;
     float velocity = 0.42f;
+  
+
+    private float jumpTimeCounter;
+    public float jumpTime;
 
     [Header ("Health Settings")]
     public int playerHP;
@@ -38,9 +46,10 @@ public class playerScript : MonoBehaviour
     [SerializeField] Transform attackOrigin;
     [SerializeField] Transform attackPos;
     [SerializeField] bool _canAttack = true;
+    
 
     float attackRadius = 4f;
-    float attackDelay = .5f;
+    [SerializeField] float attackDelay = .2f;
 
     public int attackDmg = 1;
 
@@ -98,6 +107,7 @@ public class playerScript : MonoBehaviour
                 //Walk Animation
                     if (_isGrounded == true ) { animatorController.ChangeAnimationState(playerStates[2]); } 
                     transform.Translate(new Vector3(x, 0, 0) * Time.deltaTime * _speed);
+                    PlayerFlip(x);
                 } else {
                 //Idle Animation
                     if (_isGrounded == true)
@@ -111,7 +121,12 @@ public class playerScript : MonoBehaviour
             }
 
             if (_canAttack == true && _isGrounded == false) {
-                animatorController.ChangeAnimationState(playerStates[4]);
+
+                if (_jumpAnimStart == false) {
+                    animatorController.ChangeAnimationState(playerStates[4]);
+                } else {
+                    animatorController.ChangeAnimationState(playerStates[3]);
+                }
             }
 
                 
@@ -122,10 +137,16 @@ public class playerScript : MonoBehaviour
                 }
             }
 
-            if (x == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 0); srPlayer.flipX = false;} 
-            if (x == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 180); srPlayer.flipX = true;}
+            if (Input.GetKey(KeyCode.Space) && _pressedJump == true) {
+
+                HoldJump();
+                
+            }
+
+
             if (y == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 90); }
             if (y == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 270); }
+            
 
 
             if (Input.GetKeyDown(KeyCode.J)){
@@ -148,6 +169,11 @@ public class playerScript : MonoBehaviour
         fixedGravity();
     }   
 
+    void PlayerFlip(float x) {
+        float flipVal = x;
+        if (flipVal == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 0); srPlayer.flipX = false;} 
+        if (flipVal == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 180); srPlayer.flipX = true;}
+    }
 #region jump and gravity 
     void fixedGravity() {
 
@@ -156,6 +182,8 @@ public class playerScript : MonoBehaviour
             yVelocity += velocity;
             RB2D.AddForce(new Vector2(0, -yVelocity * Time.fixedDeltaTime), ForceMode2D.Impulse);
 
+
+        
            if (Input.GetKeyDown(KeyCode.Space) && _canJump) { yVelocity = downVelocityMax; }
 
         } else {
@@ -176,7 +204,39 @@ public class playerScript : MonoBehaviour
         else jmpChkScript.enabled = false;
     }
 
-    public void isGrounded(bool state) {
+
+    void Jump() {
+        if (_jumpAnimStart == false) {
+            StartCoroutine(jumpDelay());
+        }
+        _pressedJump = true;
+        Debug.Log("Jump");
+        _isGrounded = false;
+        jmpNum--;
+        jumpTimeCounter = jumpTime;
+        RB2D.velocity = Vector2.up * jumpForce;
+        //RB2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
+    }
+
+    void HoldJump() {
+        
+        if (jumpTimeCounter > 0) {
+            RB2D.velocity = Vector2.up * jumpForce;
+            jumpTimeCounter -= Time.deltaTime;
+        } else {
+            _pressedJump = false;
+        }
+    }
+
+    IEnumerator jumpDelay() {
+        _jumpAnimStart = true;
+        yield return new WaitForSeconds(0.4f);
+        _jumpAnimStart = false;
+    }
+
+
+    //JUmp Checks
+      public void isGrounded(bool state) {
         _isGrounded = state;
     }
 
@@ -188,13 +248,6 @@ public class playerScript : MonoBehaviour
         jmpNum = maxJump;
     }
 
-    void Jump() {
-        animatorController.ChangeAnimationState(playerStates[3]);
-        Debug.Log("Jump");
-        _isGrounded = false;
-        jmpNum--;
-        RB2D.AddForce(new Vector2(0, 15), ForceMode2D.Impulse);
-    }
 #endregion
 
 #region health
@@ -284,6 +337,13 @@ public class playerScript : MonoBehaviour
     public void autoWalk(float dir) {
         animatorController.ChangeAnimationState(playerStates[2]);
         transform.Translate(new Vector3(dir, 0, 0) * Time.deltaTime * _speed);
+    }
+#endregion
+
+#region platform interaction
+
+    public void Down() {
+            RB2D.AddForce(new Vector2(0, -15), ForceMode2D.Impulse);
     }
 #endregion
 

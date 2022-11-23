@@ -13,13 +13,14 @@ public class enemySpawnControl : MonoBehaviour
     void Awake() {
     }
 
-    void SpawnPrefab() {
+    public void SpawnPrefab() {
         
         if (hasSpawned == false) {
             hasSpawned = true;
             enemyHolder = Instantiate(enemyContainer, this.transform.position, Quaternion.identity);
         } else {
            //Debug.Log(enemyHolder.transform.position);
+            enemyHolder.SetActive(true);
            enemyHolder.transform.position = this.transform.position;
         }
         
@@ -27,10 +28,13 @@ public class enemySpawnControl : MonoBehaviour
 
     }
 
-
-    void Update() {
-        if (Input.GetKeyDown(KeyCode.O)) {
-            SpawnPrefab();
-        }
+    public void leftRoom() {
+        StartCoroutine(despawnDelay());
     }
+
+    IEnumerator despawnDelay() {
+        yield return new WaitForSeconds(1f);
+        enemyHolder.SetActive(false);
+    }
+
 }
