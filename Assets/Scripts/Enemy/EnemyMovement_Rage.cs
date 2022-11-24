@@ -3,17 +3,19 @@ using System.Collections.Generic;
 using UnityEngine;
 
 
-[RequireComponent(typeof(EnemyTakeDamage))]
-public class EnemyBasic : MonoBehaviour 
-{
+[RequireComponent(typeof(Enemy))]
+public class EnemyMovement_Rage : MonoBehaviour
+{   
 
-    [SerializeField] EnemyTakeDamage damageReference;
+    enum State {PATROL, RAGE};
+    [SerializeField] State enemyState = State.PATROL;
+
 
     Rigidbody2D RB2D;
     [SerializeField] float moveSpeed = 5;
-
-    bool _isAlive = true;
-    bool _exitRoom = false;
+    
+    public bool _canMove = true;
+    bool _hitEnemy = false;
 
 
     //Left And Right Postion
@@ -21,43 +23,51 @@ public class EnemyBasic : MonoBehaviour
     const string RIGHT = "right";
 
     string facingDirection;
-    
 
     //Line Renderer
     [SerializeField] Transform castPos;
+    [SerializeField] Transform castPosRage;
     [SerializeField] float baseCastDist = 0.5f;
+    [SerializeField] float castDistPlayerDetection = 17f;
+
+    //Reference to Enemy
+    Enemy enemyReference; 
+
 
     Vector3 baseScale;
 
     void Awake() {
-        damageReference = GetComponent<EnemyTakeDamage>();
+        enemyReference = GetComponent<Enemy>();
         RB2D = GetComponent<Rigidbody2D>();
-        castPos = GameObject.Find("CastPos").GetComponent<Transform>();
+        castPos = this.gameObject.transform.GetChild(1);
+        castPosRage = this.gameObject.transform.GetChild(2);
     }
 
     void Start()
-    {
+    {        
         baseScale = transform.localScale;
         facingDirection = RIGHT;
+    }   
+
+    void Update() {
+        _canMove =  enemyReference._canMove;
     }
 
-    void Update()
-    {
-        if (_isAlive == true) {
-            this.gameObject.SetActive(true);
-        } else {
-            this.gameObject.SetActive(false);
+     void FixedUpdate() {
+
+        if (enemyState == State.PATROL) {
+            Movement();
         }
     }
 
-    void FixedUpdate() {
-
+    public void Movement() {
         float vX = (facingDirection == LEFT) ? -moveSpeed: moveSpeed;
 
         //Movement
+        if (_canMove == true) 
         RB2D.velocity = new Vector2(vX, RB2D.velocity.y);
 
-        if (isHittingWall() || checkForEdge() ) {
+        if (isHittingWall() || checkForEdge() || _hitEnemy == true ) {
 
             if (facingDirection == LEFT) {
                 ChangeFacingDirection(RIGHT);
@@ -65,21 +75,11 @@ public class EnemyBasic : MonoBehaviour
                 ChangeFacingDirection(LEFT);
             }
         }
+
+
+        // Player Detection
+        if (isDetectingPlayer() == true) {enemyState = State.RAGE; };
     }
-
-
-    #region Enemy Take Player Damage
-        
-        public void takeDamageEnemy(int dmg) {
-            damageReference.TakeDamage(dmg);
-        }
- 
-        public void Kill() {
-            _isAlive = false;
-        }
-
-    #endregion 
-
 
     #region Basic Patrol
     void ChangeFacingDirection(string newDirection) {
@@ -131,7 +131,6 @@ public class EnemyBasic : MonoBehaviour
 
         float castDist = baseCastDist;
 
-
         //Determine the target destination based on the cast distance
         Vector3 targetPos = castPos.position;
         targetPos.y -= castDist;
@@ -141,7 +140,7 @@ public class EnemyBasic : MonoBehaviour
 
 
         if (Physics2D.Linecast(castPos.position, targetPos, 1 << LayerMask.NameToLayer("Terrain"))) {
-            //We have found a wall
+            //We have found no floor
             val = false;
         } else {
             val = true;
@@ -149,5 +148,46 @@ public class EnemyBasic : MonoBehaviour
 
         return val;
     }
+    
+    void OnTriggerEnter2D(Collider2D other) {
+        if (other.CompareTag("Enemy")) {
+            _hitEnemy = true;
+        }
+        else _hitEnemy = false;
+    }
     #endregion
+
+    #region Player Check
+        bool isDetectingPlayer() {
+            bool val = false;
+
+            float castDist = castDistPlayerDetection;
+
+            if (facingDirection == LEFT) {
+                castDist = -castDistPlayerDetection;
+            } else {
+                castDist = castDistPlayerDetection;
+            }
+
+
+            //Determine the target destination based on the cast distance
+            Vector3 targetPos = castPosRage.position;
+            targetPos.x += castDist;
+
+            //Draw Line
+            Debug.DrawLine(castPosRage.position, targetPos, Color.yellow);
+
+
+            if (Physics2D.Linecast(castPosRage.position, targetPos, 1 << LayerMask.NameToLayer("Character"))) {
+                //We have found a Player
+                val = true;
+            } else {
+                val = false;
+            }
+
+            return val;
+        }
+    #endregion 
+
+
 }

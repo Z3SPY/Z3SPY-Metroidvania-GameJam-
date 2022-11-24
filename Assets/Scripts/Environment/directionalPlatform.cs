@@ -17,13 +17,15 @@ public class directionalPlatform : MonoBehaviour
     void Update() {
 
         if(Input.GetKeyUp(KeyCode.S)) {
+            Physics2D.IgnoreCollision(Player.GetComponent<Collider2D>(), GetComponent<Collider2D>(), false);
             waitTime = 0.15f;
         }
 
         if (Input.GetKey(KeyCode.S) ) {
             if (waitTime <= 0) {
                 Player.Down();
-                effector.rotationalOffset = 180f;
+                //effector.rotationalOffset = 160;
+                Physics2D.IgnoreCollision(Player.GetComponent<Collider2D>(), GetComponent<Collider2D>());
                 waitTime = 0.15f;
             } else {
                 waitTime -= Time.deltaTime;
@@ -32,6 +34,7 @@ public class directionalPlatform : MonoBehaviour
 
 
         if (Input.GetKeyDown(KeyCode.Space)) {
+            Physics2D.IgnoreCollision(Player.GetComponent<Collider2D>(), GetComponent<Collider2D>(), false);
             effector.rotationalOffset = 0f;
         }
     }

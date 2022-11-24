@@ -47,13 +47,13 @@ public class playerScript : MonoBehaviour
     [SerializeField] Transform attackPos;
     [SerializeField] bool _canAttack = true;
     
-
     float attackRadius = 4f;
     [SerializeField] float attackDelay = .2f;
-
     public int attackDmg = 1;
 
-    
+
+    [Header ("Misc")]
+    [SerializeField] Transform checkPoint;
 
     [Header ("References")]
     [SerializeField] Rigidbody2D RB2D;
@@ -87,7 +87,12 @@ public class playerScript : MonoBehaviour
 
     void Update()
     {   
-
+        
+        //Reset 
+        if (Input.GetKeyDown(KeyCode.R)) {
+            this.transform.position = checkPoint.position;
+        }
+    
         if (autoWalkBool == true) {
             autoWalk(walk);
         }
@@ -117,6 +122,7 @@ public class playerScript : MonoBehaviour
                 if (x != 0) {
                     transform.Translate(new Vector3(x, 0, 0) * Time.deltaTime * _speed);
                 }
+
                 animatorController.ChangeAnimationState(playerStates[1]);
             }
 
@@ -132,12 +138,12 @@ public class playerScript : MonoBehaviour
                 
             if (Input.GetKeyDown(KeyCode.Space) && _canJump) {
 
-                if (Input.GetKey(KeyCode.S) == false) {
+                if (Input.GetKey(KeyCode.S) == false && _isGrounded == true) {
                     Jump();
                 }
             }
 
-            if (Input.GetKey(KeyCode.Space) && _pressedJump == true) {
+            if (Input.GetKey(KeyCode.Space) && _pressedJump == true ) {
 
                 HoldJump();
                 
@@ -281,9 +287,9 @@ public class playerScript : MonoBehaviour
         foreach ( Collider2D collider in Physics2D.OverlapCircleAll(attackPos.position, attackRadius))
         {
             if (collider.CompareTag("Enemy")) {
-                collider.GetComponent<EnemyBasic>().takeDamageEnemy(attackDmg);
+                collider.GetComponent<Enemy>().takeDamageEnemy(attackDmg, this.gameObject);
             }
-            Debug.Log(collider.name);
+            //Debug.Log(collider.name);
         } 
 
         Invoke("changeAttack", attackDelay);
@@ -326,6 +332,11 @@ public class playerScript : MonoBehaviour
 
 
 #region room State 
+
+    public void getCheckPoint(Transform roomCheck) {
+        checkPoint = roomCheck;
+    } 
+
     public void setAutoWalk() {
 
         if (walk == 0 && autoWalkBool == false) {
@@ -343,7 +354,7 @@ public class playerScript : MonoBehaviour
 #region platform interaction
 
     public void Down() {
-            RB2D.AddForce(new Vector2(0, -15), ForceMode2D.Impulse);
+            RB2D.AddForce(new Vector2(0, -5), ForceMode2D.Impulse);
     }
 #endregion
 

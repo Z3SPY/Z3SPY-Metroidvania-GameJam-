@@ -7,9 +7,14 @@ public class SwitchController : MonoBehaviour
         
     [SerializeField] private bool _closed = true;
     [SerializeField] private bool _canPress = true;
+    Animator anim;
 
 
     public int id;
+
+    void Awake() {
+        anim = GetComponent<Animator>();
+    }
 
     private void OnTriggerStay2D(Collider2D other) {
         if (other.CompareTag("Player")) {
@@ -30,9 +35,11 @@ public class SwitchController : MonoBehaviour
         Debug.Log("Clicked");
         if (_closed == true) {
             _closed = false;
+            anim.Play("Switch-On");
             GameEvents.current.DoorwayTriggerEnter(id);
         } else if (_closed == false) {
             _closed = true;
+            anim.Play("Switch");
             GameEvents.current.DoorwayTriggerClose(id);
         }
 

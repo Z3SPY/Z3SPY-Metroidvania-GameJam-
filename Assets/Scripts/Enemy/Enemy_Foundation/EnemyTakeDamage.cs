@@ -15,9 +15,9 @@ public class EnemyTakeDamage : MonoBehaviour
         healthReference = GetComponent<EnemyHealth>();
     }
 
-    public void TakeDamage(int dmgAmt) {
+    public void TakeDamage(int dmgAmt, GameObject sender) {
         if (_canTakeDmg == true) {
-            healthReference.ChangeHealth(dmgAmt);
+            healthReference.ChangeHealth(dmgAmt, sender);
             StartCoroutine(dmgCounter());
             print("Damage Enemy");
         }
@@ -28,5 +28,12 @@ public class EnemyTakeDamage : MonoBehaviour
         _canTakeDmg = false;
         yield return new WaitForSeconds(dmgDelay);
         _canTakeDmg = true;
+    }
+
+    public void healthReset() {
+        Debug.Log("Reset");
+        //Resets Variables
+        _canTakeDmg = true;
+        healthReference.ResetHealth();
     }
 }

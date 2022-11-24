@@ -20,7 +20,7 @@ TagManager:
   - 
   - 
   - Terrain
-  - 
+  - Character
   - 
   - 
   - 
@@ -49,6 +49,9 @@ TagManager:
     locked: 0
   - name: Tiles
     uniqueID: 4075555341
+    locked: 0
+  - name: Design
+    uniqueID: 1423510291
     locked: 0
   - name: Player
     uniqueID: 3302929659
