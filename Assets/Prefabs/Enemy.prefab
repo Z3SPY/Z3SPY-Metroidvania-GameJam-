@@ -243,19 +243,7 @@ MonoBehaviour:
   maxHealth: 4
   OnHit:
     m_PersistentCalls:
-      m_Calls:
-      - m_Target: {fileID: 4433175161462938561}
-        m_MethodName: PlayFeedback
-        m_Mode: 2
-        m_Arguments:
-          m_ObjectArgument: {fileID: 6640812610217168701, guid: ae708d1fc3141da4c9a5c0a820c15f8b,
-            type: 3}
-          m_ObjectArgumentAssemblyTypeName: UnityEngine.GameObject, UnityEngine
-          m_IntArgument: 0
-          m_FloatArgument: 0
-          m_StringArgument: 
-          m_BoolArgument: 0
-        m_CallState: 2
+      m_Calls: []
   OnDeath:
     m_PersistentCalls:
       m_Calls:
@@ -283,6 +271,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   damageReference: {fileID: 0}
+  deathParticleObject: {fileID: 8677361554160637896, guid: c7ed8249e7e23c14a91fb5672a79a412,
+    type: 3}
   _canMove: 1
   spawner: {fileID: 0}
   sr: {fileID: 6449758145688944525}
@@ -378,7 +368,7 @@ BoxCollider2D:
   m_IsTrigger: 1
   m_UsedByEffector: 0
   m_UsedByComposite: 0
-  m_Offset: {x: 0, y: 0.0923872}
+  m_Offset: {x: 0.36772203, y: -0.1427139}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -389,5 +379,5 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.5, y: 1}
+  m_Size: {x: 2.3318968, y: 1.4702022}
   m_EdgeRadius: 0

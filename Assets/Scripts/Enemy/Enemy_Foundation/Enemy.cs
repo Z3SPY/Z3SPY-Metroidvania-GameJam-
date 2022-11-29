@@ -6,7 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(EnemyTakeDamage))]
 public class Enemy : MonoBehaviour 
 {
+
     [SerializeField] EnemyTakeDamage damageReference;
+    [SerializeField] GameObject deathParticleObject;
 
     bool _isAlive = true;
     bool _exitRoom = false;
@@ -48,11 +50,12 @@ public class Enemy : MonoBehaviour
         
         public void takeDamageEnemy(int dmg, GameObject sender) {
             damageReference.TakeDamage(dmg, sender);
+            GameManager.instance.increaseToast();
         }
  
         public void Kill() {
+            Instantiate(deathParticleObject, this.transform.position, Quaternion.identity);
             _isAlive = false;
-
             if (spawner != null) {
                 spawner.enemyDied();
             }
@@ -62,6 +65,7 @@ public class Enemy : MonoBehaviour
             _isAlive = true;
             _canMove = true;
             damageReference.healthReset(); //damage Reference Calls Health Reference in its Code
+            sr.color = new Color(1f, 1f, 1f);
         }
 
         // Called in Events in Insepctor

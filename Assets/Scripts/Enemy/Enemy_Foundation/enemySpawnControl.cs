@@ -14,8 +14,8 @@ public class enemySpawnControl : MonoBehaviour
 
 
     [SerializeField] GameObject enemyContainer;
-    [SerializeField] GameObject enemyHolder;
     [SerializeField] Enemy enemyReference;
+    public GameObject enemyHolder;
     public bool hasSpawned = false;
     public bool _isAlive = false;
     
@@ -41,6 +41,7 @@ public class enemySpawnControl : MonoBehaviour
         if (hasSpawned == false) {
             hasSpawned = true;
             enemyHolder = Instantiate(enemyContainer, this.transform.position, Quaternion.identity);
+            enemyHolder.transform.parent = gameObject.transform;
             if (enemyHolder != null) {
                 enemyReference = enemyHolder.GetComponent<Enemy>();
                 enemyReference.setSpawner(this.gameObject);

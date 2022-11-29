@@ -14,19 +14,28 @@ public class Room : MonoBehaviour
             //Camera Handler
             virtualCam.SetActive(true);
 
-            //Handles Enemy Spawn
-            foreach (GameObject item in enemySpawnConatiner)
-            {
-                if (item.GetComponent<enemySpawnControl>() == true) {
-                     item.GetComponent<enemySpawnControl>().SpawnPrefab();
-                }
-            }
-
             //CheckPoint Handler
-            other.GetComponent<playerScript>().getCheckPoint(mainCheckPoint.transform);
+    
+            if (mainCheckPoint != null) {
+                other.GetComponent<playerScript>().getCheckPoint(mainCheckPoint.transform);
+            }
         }
     }
 
+
+
+    private void OnTriggerStay2D(Collider2D other) {
+        if (other.CompareTag("Player") && !other.isTrigger ) {
+            //Handles Enemy Spawn
+            foreach (GameObject item in enemySpawnConatiner)
+            {
+                if ((item.GetComponent<enemySpawnControl>() == true && item.GetComponent<enemySpawnControl>().hasSpawned == false) 
+                || item.GetComponent<enemySpawnControl>().enemyHolder.activeSelf == false) {
+                     item.GetComponent<enemySpawnControl>().SpawnPrefab();
+                }
+            }
+        }
+    }
     private void OnTriggerExit2D(Collider2D other) {
         if (other.CompareTag("Player") && !other.isTrigger) {
             virtualCam.SetActive(false);

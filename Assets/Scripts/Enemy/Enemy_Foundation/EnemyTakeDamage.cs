@@ -4,20 +4,24 @@ using UnityEngine;
 
 
 [RequireComponent(typeof(EnemyHealth))]
+[RequireComponent(typeof(KnockbackScript))]
 public class EnemyTakeDamage : MonoBehaviour
 {
 
     EnemyHealth healthReference;
+    KnockbackScript knockbackRef;
     float dmgDelay = 0.1f;
     bool _canTakeDmg = true;
 
     private void Awake() {
         healthReference = GetComponent<EnemyHealth>();
+        knockbackRef = GetComponent<KnockbackScript>();
     }
 
     public void TakeDamage(int dmgAmt, GameObject sender) {
         if (_canTakeDmg == true) {
             healthReference.ChangeHealth(dmgAmt, sender);
+            knockbackRef.PlayFeedback(sender); 
             StartCoroutine(dmgCounter());
             print("Damage Enemy");
         }
