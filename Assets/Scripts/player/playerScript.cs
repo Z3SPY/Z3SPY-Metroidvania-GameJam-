@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
-
+using UnityEngine.Events;
+using Cinemachine;
 
 public class playerScript : MonoBehaviour
 {
@@ -15,16 +15,20 @@ public class playerScript : MonoBehaviour
     [SerializeField] float _speed = 10f;
     [SerializeField] bool _canJump = false;
     [SerializeField] bool _isGrounded = true;
-    public bool autoWalkBool = false;
     [SerializeField] bool _inTheAir = false;
     public float walk = 0f;
     public string direction = "RIGHT";
     private float prevX;
 
+    public bool autoWalkBool = false;
+    public bool autoJumpBool = false;
+    public bool autoFallBool = false;
+
+
     [Header ("Metroid Vania Boot Components")]
-    [SerializeField] bool _obtainedDash = false;
-    [SerializeField] bool _obtainedCrouch = false;
-    [SerializeField] bool _obtainedShoot = false;
+    public bool _obtainedDash = false;
+    public bool _obtainedCrouch = false;
+    public bool _obtainedShoot = false;
 
     [Header("Dashing")]
     [SerializeField] float _dashingVelocity = 14f;
@@ -62,11 +66,15 @@ public class playerScript : MonoBehaviour
     public float delayDmg = 1.25f; 
     public bool pressingHeal = false;
     [SerializeField] float healTime = 0f;
+    public UnityEvent onHit, onHeal;
 
 
     [Header("Particle System")]
     public ParticleSystem dust;
     public ParticleSystem verticalDust;
+    public ParticleSystem healParticle;
+    public ParticleSystem healCharge;
+    [SerializeField] TrailRenderer line;
 
     [Header ("Attack Settings")]
     [SerializeField] Transform attackOrigin;
@@ -81,11 +89,17 @@ public class playerScript : MonoBehaviour
     [Header("Shoot")]
     public GameObject bulletPreFab;
 
+    [Header("Camera")]
+    [SerializeField] GameObject cameraRef; //Camera Reference
+    int cameraFOVMax = 111;
+    int cameraFOV;
 
     [Header ("Misc")]
     [SerializeField] Transform checkPoint; // Room Check Point
+    [SerializeField] Transform deathCheckPoint; // Death Check Point
     [SerializeField] BoxCollider2D playerHitBox;
 
+   
     [Header ("References")]
     Rigidbody2D RB2D;
     jumpCheckScript jmpChkScript;
@@ -113,16 +127,14 @@ public class playerScript : MonoBehaviour
         jmpNum = maxJump;
         yVelocity = downVelocityMax;
         playerHP = maxHp;
+        cameraFOV = cameraFOVMax;
+        line.emitting = false;
 
     }
 
     void Update()
     {       
 
-        //Reset Please Delete Later
-        if (Input.GetKeyDown(KeyCode.R)) {
-            this.transform.position = checkPoint.position;
-        }
 
         if (_obtainedDash == true) {
             dashFunc();
@@ -132,21 +144,26 @@ public class playerScript : MonoBehaviour
             Crouch();
         }
 
-
+    #region  Health and Shoot Logic
         //Health
-        if (playerHP <= 0) {
-            _isDead = true;
-            Debug.Log("Dead");
-        }
+        damageHandler();
 
         if (Input.GetKeyDown(KeyCode.K)) {
             pressingHeal = true;
+                     
         } 
 
         if (pressingHeal == true) {
             healTime += Time.deltaTime;
 
-            if (healTime >= 3) {
+            if (GameManager.instance.toastFloat >= 1f) {
+                cameraFOV -= (int) (1);
+                cameraRef.GetComponent<CinemachineVirtualCamera>().m_Lens.FieldOfView = (100 <= cameraFOV) ? cameraFOV : 100;   
+                healCharge.Play();
+            } 
+            
+
+            if (healTime >= 2.5) {
                 Heal();
                 healTime = 0f;
             }
@@ -156,21 +173,63 @@ public class playerScript : MonoBehaviour
             if (healTime <= 0.75f && _obtainedShoot) {
                 Shoot();
             }
-
+            cameraRef.GetComponent<CinemachineVirtualCamera>().m_Lens.FieldOfView = cameraFOVMax;            
             pressingHeal = false;
             healTime = 0f;
         }
         
-       
+    #endregion
     
         if (autoWalkBool == true) {
             autoWalk(walk);
         }
 
+        if (autoJumpBool == true && autoFallBool == false) {
+            autoJump();
+        }
+
         jmpCheck();
+        Move();
+        
+        
+
+    }
+
+    void canAttackChange() {
+        _canAttack = false;
+    }
+
+    //When Messing With Physics
+    void FixedUpdate() {
+
+        if (autoJumpBool == false) {
+            fixedGravity();
+        }
+        
+    }   
+
+    void PlayerFlip(float x) {
+        float flipVal = x;
+        if (_isDashing == false) {
+            if (flipVal == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 0); srPlayer.flipX = false; direction = "RIGHT";} 
+            if (flipVal == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 180); srPlayer.flipX = true; direction = "LEFT";}
+        }   
+        
+    }
+
+#region Movement Inputs
+    public void Move() {
         //Movement
         x = Input.GetAxisRaw("Horizontal");
         y = Input.GetAxisRaw("Vertical");
+
+        if (_isDashing == false) {
+            playerHitBox.size = new Vector2(2.5f, 3.4f);
+            playerHitBox.offset = new Vector2(-0.2f, -0.9f);
+        } else {
+            playerHitBox.size = new Vector2(2.5f, 2.3f);
+            playerHitBox.offset = new Vector2(-0.2f, -1.4f);
+        }
 
 
         if (autoWalkBool == false) {
@@ -259,27 +318,10 @@ public class playerScript : MonoBehaviour
             }
        
         }
-        
-
     }
 
-    void canAttackChange() {
-        _canAttack = false;
-    }
+#endregion
 
-    //When Messing With Physics
-    void FixedUpdate() {
-        fixedGravity();
-    }   
-
-    void PlayerFlip(float x) {
-        float flipVal = x;
-        if (_isDashing == false) {
-            if (flipVal == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 0); srPlayer.flipX = false; direction = "RIGHT";} 
-            if (flipVal == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 180); srPlayer.flipX = true; direction = "LEFT";}
-        }   
-        
-    }
 #region jump and gravity 
     void fixedGravity() {
 
@@ -373,14 +415,24 @@ public class playerScript : MonoBehaviour
             playerHP++;
             GameManager.instance.resetToast();
             HealthController.instance.updateHealth(playerHP);
+
+            //Particles
+            healParticle.Play();
+            onHeal?.Invoke();
         }
     }
 
-    public void takeDamage(int dmg) {
+    public void takeDamage(int dmg, float delay) {
         playerHP -= dmg;
         _invulnerable = true;
         HealthController.instance.updateHealth(playerHP);
-        StartCoroutine(hitVulnerability());
+
+
+        //Damage Events
+        StartCoroutine(hitVisual());
+        StartCoroutine(hitVulnerability(delay));
+        onHit?.Invoke(); // Shake Event
+
     }
 
     void damageHandler() {
@@ -388,10 +440,20 @@ public class playerScript : MonoBehaviour
             _isDead = true;
             Debug.Log("Dead");
         }
+
+        if (_isDead == true) {
+            this.transform.position = deathCheckPoint.position;
+            _isDead = false;
+            GameManager.instance.ResetEnemies();
+            resetHp();
+        }
     }
 
     public void Fall() {
-        playerHP -= 1;
+        RB2D.velocity =  new Vector2 (0f, 0f);
+        onHit?.Invoke();
+        
+        if (_invulnerable == false) {takeDamage(1, delayDmg);}
         StartCoroutine(FallingWait());
     }
 
@@ -433,15 +495,23 @@ public class playerScript : MonoBehaviour
 
 #region Collision
     void OnTriggerEnter2D(Collider2D other) {
-            if (other.CompareTag("Enemy") && _invulnerable == false) {
-                takeDamage(1);
+            if ((other.CompareTag("Enemy") || other.CompareTag("Trap")) && _invulnerable == false) {
+                if (other.CompareTag("Enemy")) {
+                    takeDamage(1, delayDmg);
+                } else if (other.CompareTag("Trap")) {
+                    takeDamage(1, 1.5f);
+                }
                 knockbackRef.PlayFeedback(other.gameObject);
                 RB2D.AddForce(new Vector2(0, 5), ForceMode2D.Impulse);
             }
 
             if (other.CompareTag("Room")) {
                 autoWalkBool = false;
+                autoJumpBool = false;
+                autoFallBool = false;
+
                 walk = 0;
+
                 transitionHandler.instance.transitionOut();
             }
 
@@ -449,13 +519,15 @@ public class playerScript : MonoBehaviour
                 Fall();
                 Debug.Log("Falling");
             }
+
         }
 
-    IEnumerator hitVulnerability () {
+   
+
+    IEnumerator hitVulnerability (float delay) {
         //While True
         while (_invulnerable == true) {
-            StartCoroutine(hitVisual());
-            yield return new WaitForSeconds(delayDmg);
+            yield return new WaitForSeconds(delay);
             _invulnerable = false;
         } 
     }
@@ -478,6 +550,14 @@ public class playerScript : MonoBehaviour
         checkPoint = roomCheck;
     } 
 
+    public void getMainCheckPoint(Transform roomCheck) {
+        deathCheckPoint = roomCheck;
+    } 
+
+    public void setCameraReference(GameObject cameraObj) {
+        cameraRef = cameraObj;
+    }
+
     public void setAutoWalk() {
 
         if (walk == 0 && autoWalkBool == false) {
@@ -486,20 +566,35 @@ public class playerScript : MonoBehaviour
         } 
     }
 
+    public void setAutoJump() {
+        if (autoJumpBool == false) {
+            autoJumpBool = true;
+        }
+    }
+
     public void autoWalk(float dir) {
         _isCrouching = false;
         animatorController.ChangeAnimationState(playerStates[2]);
         transform.Translate(new Vector3(dir, 0, 0) * Time.deltaTime * _speed);
+    }
+
+    public void autoJump() {
+        animatorController.ChangeAnimationState(playerStates[4]);
+        transform.Translate(new Vector3(0, 3f, 0) * Time.deltaTime * _speed);
+    }
+
+    public void autoFall() {
+        autoFallBool = true;
     }
 #endregion
 
 #region platform interaction
 
     public void Down() {
-            RB2D.AddForce(new Vector2(0, -5), ForceMode2D.Impulse);
+        RB2D.AddForce(new Vector2(0, -5), ForceMode2D.Impulse);
     }
-#endregion
 
+#endregion
 
 #region metroid vania items
     #region dashing
@@ -510,10 +605,13 @@ public class playerScript : MonoBehaviour
                 _isDashing = true;
                 _canDash = false;
 
+                _invulnerable = true;
+                StartCoroutine(hitVulnerability(0.2f));
+
                 float dashX = (_isGrounded == true) ? prevX * 1.2f : prevX;
 
                 
-                _dashingDir = new Vector2(dashX, 0);
+                _dashingDir = new Vector2(dashX, 0f);
 
                 if (_dashingDir == Vector2.zero) {
                     _dashingDir = new Vector2(transform.localScale.x, 0);
@@ -524,9 +622,10 @@ public class playerScript : MonoBehaviour
             }
 
             if (_isDashing) {
+                line.emitting = true;
                 animatorController.ChangeAnimationState(playerStates[5]);
                 RB2D.velocity = _dashingDir.normalized * _dashingVelocity;
-                return;
+                return; 
             }
 
         }
@@ -534,6 +633,7 @@ public class playerScript : MonoBehaviour
         private IEnumerator stopDashing() {
             yield return new WaitForSeconds(_dashingTime);     
             _isDashing = false;
+            line.emitting = false;
             RB2D.velocity = new Vector2 (0, RB2D.velocity.y);
         }
 
@@ -571,8 +671,8 @@ public class playerScript : MonoBehaviour
 
                     if (_isCrouching == true && checkForWall()) {
                         _isCrouching = false;
-                        playerHitBox.size = new Vector2(2.5f, 4f);
-                        playerHitBox.offset = new Vector2(-0.2f, -0.65f);
+                        playerHitBox.size = new Vector2(2.5f, 3.4f);
+                        playerHitBox.offset = new Vector2(-0.2f, -0.9f);
                     }
                         
             }
@@ -586,8 +686,8 @@ public class playerScript : MonoBehaviour
                 } else if (_isCrouching == true && checkForWall()) {
                     
                     _isCrouching = false;
-                    playerHitBox.size = new Vector2(2.5f, 4f);
-                    playerHitBox.offset = new Vector2(-0.2f, -0.65f);
+                    playerHitBox.size = new Vector2(2.5f, 3.4f);
+                    playerHitBox.offset = new Vector2(-0.2f, -0.9f);
                     
                 }
 

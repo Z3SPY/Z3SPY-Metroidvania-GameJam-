@@ -17,10 +17,9 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R)) {
-            enemySpawnControl.instance.resetLife();
-        }
+        
     }
+    
 
     void FixedUpdate() {
         if (toastFloat <= 1f){ 
@@ -40,5 +39,9 @@ public class GameManager : MonoBehaviour
 
     public void increaseToast() {
         toastFloat += 0.01f;
+    }
+
+    public void ResetEnemies() {
+        enemySpawnControl.instance.resetLife();
     }
 }

@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class DoorController : MonoBehaviour
 {
+    enum doorState {OPEN, CLOSE};
+    [SerializeField] doorState door = doorState.CLOSE;
 
     public int id;
     [SerializeField] Transform point1, point2;
@@ -13,6 +15,10 @@ public class DoorController : MonoBehaviour
     {
         GameEvents.current.onDoorwayTriggerEnter += OnDoorwayOpen;
         GameEvents.current.onDoorwayTriggerClose += OnDoorwayClose;
+
+        if (door == doorState.OPEN) {
+            OnDoorwayOpen(id);
+        }
 
     }
 
@@ -30,5 +36,14 @@ public class DoorController : MonoBehaviour
             LeanTween.moveLocalY(gameObject, point2.position.y, speenWhenOff).setEaseOutQuad();
             Debug.Log("Opening");
         }
+    }
+
+
+    public void DoorCloseCollect(int id) {
+        if (id == this.id) {
+            LeanTween.moveLocalY(gameObject, point1.position.y, speedWhenOn).setEaseInQuad();
+            Debug.Log("Closing");
+        }
+
     }
 }

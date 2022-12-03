@@ -5,7 +5,7 @@ using UnityEngine;
 public class transitionRoom : MonoBehaviour
 {
     
-    enum Type {HORIZONTAL , VERTICAL, TELEPORT};    
+    enum Type {HORIZONTAL , VERTICAL, TELEPORT, FALL};    
 
     [SerializeField] Type transitionType = Type.HORIZONTAL;
 
@@ -14,6 +14,15 @@ public class transitionRoom : MonoBehaviour
 
             if (transitionType == Type.HORIZONTAL) {
                 other.GetComponent<playerScript>().setAutoWalk();
+            }
+
+            if (transitionType == Type.VERTICAL) {
+                other.GetComponent<playerScript>().setAutoJump();
+            }
+
+            if (transitionType == Type.FALL) {
+                if (other.GetComponent<playerScript>().autoJumpBool == false)
+                other.GetComponent<playerScript>().autoFall();
             }
             transitionHandler.instance.transitionIn();
         }

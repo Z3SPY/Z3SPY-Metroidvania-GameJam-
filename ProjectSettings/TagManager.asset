@@ -11,6 +11,8 @@ TagManager:
   - Room
   - Transition
   - FallDetection
+  - Collectible
+  - Trap
   layers:
   - Default
   - TransparentFX
@@ -22,7 +24,7 @@ TagManager:
   - 
   - Terrain
   - Character
-  - 
+  - Player
   - 
   - 
   - 
