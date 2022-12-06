@@ -11,6 +11,8 @@ public class Collectible : MonoBehaviour
     public bool _collected = false;
     public ParticleSystem particle;
     public string msgEvent, msgCommand;
+    [SerializeField] SpriteRenderer sr; 
+    public Sprite itemSprite;
 
     //Missing
     //Screen Shake
@@ -19,10 +21,26 @@ public class Collectible : MonoBehaviour
 
     public UnityEvent OnCollect;
 
+    void Start() {
+        sr.sprite = itemSprite;
+    }
+
     void OnTriggerEnter2D(Collider2D other) {
         if (other.CompareTag("Player")) {
             this.gameObject.SetActive(false);
-            other.GetComponent<playerScript>()._obtainedDash = true;
+
+            switch (msgEvent)
+            {
+                case "OBTAINED DASH":
+                    other.GetComponent<playerScript>()._obtainedDash = true;
+                    break;
+                case "OBTAINED DOUBLE JUMP":
+                    other.GetComponent<playerScript>()._obtainedDoubleJump = true;
+                    break;
+                default:
+                    break;
+            }
+            
             other.GetComponent<playerScript>().getMainCheckPoint(this.transform);
             OnCollect?.Invoke();
             particle.Stop();

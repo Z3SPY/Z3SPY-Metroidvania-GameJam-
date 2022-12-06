@@ -41,8 +41,14 @@ public class DoorController : MonoBehaviour
 
     public void DoorCloseCollect(int id) {
         if (id == this.id) {
-            LeanTween.moveLocalY(gameObject, point1.position.y, speedWhenOn).setEaseInQuad();
-            Debug.Log("Closing");
+            OnDoorwayClose(id);
+        }
+
+    }
+
+    public void DoorOpenCollect(int id) {
+        if (id == this.id) {
+            OnDoorwayOpen(id);
         }
 
     }

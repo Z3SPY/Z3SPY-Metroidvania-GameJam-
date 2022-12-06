@@ -11,7 +11,6 @@ public class Enemy : MonoBehaviour
     [SerializeField] GameObject deathParticleObject;
 
     bool _isAlive = true;
-    bool _exitRoom = false;
     public bool _canMove = true;
 
     //Reference To Spawner

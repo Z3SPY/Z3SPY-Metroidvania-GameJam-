@@ -18,7 +18,6 @@ public class Room : MonoBehaviour
 
             if ((RoomType == roomType.Room || RoomType == roomType.Transition) && virtualCam != null) {
                 virtualCam.SetActive(true);
-                other.GetComponent<playerScript>().setCameraReference(virtualCam);
             } 
 
                     
@@ -34,6 +33,12 @@ public class Room : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D other) {
         if (other.CompareTag("Player") && !other.isTrigger ) {
+
+            if ((RoomType == roomType.Room || RoomType == roomType.Transition) && virtualCam != null) {
+                other.GetComponent<playerScript>().setCameraReference(virtualCam);
+            } 
+
+
             //Handles Enemy Spawn
             foreach (GameObject item in enemySpawnConatiner)
             {

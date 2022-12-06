@@ -29,6 +29,7 @@ public class playerScript : MonoBehaviour
     public bool _obtainedDash = false;
     public bool _obtainedCrouch = false;
     public bool _obtainedShoot = false;
+    public bool _obtainedDoubleJump = false;
 
     [Header("Dashing")]
     [SerializeField] float _dashingVelocity = 14f;
@@ -94,9 +95,10 @@ public class playerScript : MonoBehaviour
     int cameraFOVMax = 111;
     int cameraFOV;
 
-    [Header ("Misc")]
+    [Header ("CheckPoint")]
     [SerializeField] Transform checkPoint; // Room Check Point
     [SerializeField] Transform deathCheckPoint; // Death Check Point
+    GameObject checkPointRef;
     [SerializeField] BoxCollider2D playerHitBox;
 
    
@@ -142,6 +144,10 @@ public class playerScript : MonoBehaviour
 
         if (_obtainedCrouch == true) {
             Crouch();
+        }
+
+        if (_obtainedDoubleJump == true) {
+            maxJump = 2;
         }
 
     #region  Health and Shoot Logic
@@ -294,9 +300,14 @@ public class playerScript : MonoBehaviour
                 
             if (Input.GetKeyDown(KeyCode.Space) && _canJump) {
 
-                if (Input.GetKey(KeyCode.S) == false && _isGrounded == true) {
-                    Jump();
+                if (Input.GetKey(KeyCode.S) == false && jmpNum > 0f) {
+                    if (_isGrounded) 
+                    Jump(1f);
+                    else 
+                    Jump(.75f);
                 }
+
+                
             }
 
             if (Input.GetKey(KeyCode.Space) && _pressedJump == true ) {
@@ -353,7 +364,7 @@ public class playerScript : MonoBehaviour
     }
 
 
-    void Jump() {
+    void Jump(float multiplier) {
         if (_jumpAnimStart == false) {
             StartCoroutine(jumpDelay());
         }
@@ -365,7 +376,7 @@ public class playerScript : MonoBehaviour
         _isGrounded = false;
         jmpNum--;
         jumpTimeCounter = jumpTime;
-        RB2D.velocity = Vector2.up * jumpForce;
+        RB2D.velocity = Vector2.up * (jumpForce * multiplier);
         //RB2D.AddForce(new Vector2(0, jumpForce), ForceMode2D.Impulse);
     }
 
@@ -438,22 +449,27 @@ public class playerScript : MonoBehaviour
     void damageHandler() {
         if (playerHP <= 0) {
             _isDead = true;
+            GameManager.instance.playerDead();
             Debug.Log("Dead");
         }
 
         if (_isDead == true) {
             this.transform.position = deathCheckPoint.position;
             _isDead = false;
+
+            //States 
+            checkPointRef.GetComponent<checkPoint>().sparking(); //Check point spark
+            GameManager.instance.playerDead(); //Communicates with Check point
             GameManager.instance.ResetEnemies();
             resetHp();
         }
     }
 
     public void Fall() {
-        RB2D.velocity =  new Vector2 (0f, 0f);
-        onHit?.Invoke();
-        
+        RB2D.velocity =  new Vector2 (0f, 0f);        
         if (_invulnerable == false) {takeDamage(1, delayDmg);}
+
+        if (playerHP >= 1)
         StartCoroutine(FallingWait());
     }
 
@@ -554,6 +570,10 @@ public class playerScript : MonoBehaviour
         deathCheckPoint = roomCheck;
     } 
 
+    public void getCheckPointObject(GameObject obj) {
+        checkPointRef = obj;
+    } 
+
     public void setCameraReference(GameObject cameraObj) {
         cameraRef = cameraObj;
     }
@@ -580,7 +600,7 @@ public class playerScript : MonoBehaviour
 
     public void autoJump() {
         animatorController.ChangeAnimationState(playerStates[4]);
-        transform.Translate(new Vector3(0, 3f, 0) * Time.deltaTime * _speed);
+        transform.Translate(new Vector3(0, 5f, 0) * Time.deltaTime * _speed);
     }
 
     public void autoFall() {
@@ -606,7 +626,7 @@ public class playerScript : MonoBehaviour
                 _canDash = false;
 
                 _invulnerable = true;
-                StartCoroutine(hitVulnerability(0.2f));
+                StartCoroutine(hitVulnerability(0.3f));
 
                 float dashX = (_isGrounded == true) ? prevX * 1.2f : prevX;
 
@@ -623,7 +643,12 @@ public class playerScript : MonoBehaviour
 
             if (_isDashing) {
                 line.emitting = true;
-                animatorController.ChangeAnimationState(playerStates[5]);
+
+                if (_isCrouching == false) {
+                    animatorController.ChangeAnimationState(playerStates[5]);
+                } else {
+                    animatorController.ChangeAnimationState(playerStates[7]);
+                }
                 RB2D.velocity = _dashingDir.normalized * _dashingVelocity;
                 return; 
             }

@@ -7,6 +7,8 @@ public class GameManager : MonoBehaviour
 
     #region singleton
     public static GameManager instance;
+    public bool plyrAlive = true;
+
     void Awake() {
         instance = this;
     }
@@ -43,5 +45,13 @@ public class GameManager : MonoBehaviour
 
     public void ResetEnemies() {
         enemySpawnControl.instance.resetLife();
+    }
+
+    public void playerDead() {
+        plyrAlive = false;
+    }
+
+    public void playerAlive() {
+        plyrAlive = true;
     }
 }

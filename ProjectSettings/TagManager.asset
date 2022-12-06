@@ -13,6 +13,7 @@ TagManager:
   - FallDetection
   - Collectible
   - Trap
+  - Perimeter
   layers:
   - Default
   - TransparentFX
@@ -47,6 +48,12 @@ TagManager:
   - 
   - 
   m_SortingLayers:
+  - name: Background
+    uniqueID: 1969322483
+    locked: 0
+  - name: Background-Tile
+    uniqueID: 1935251453
+    locked: 0
   - name: Default
     uniqueID: 0
     locked: 0
