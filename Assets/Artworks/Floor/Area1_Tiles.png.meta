@@ -585,8 +585,8 @@ TextureImporter:
       name: Area1_Tiles_12
       rect:
         serializedVersion: 2
-        x: 128
-        y: 144
+        x: 94
+        y: 56
         width: 16
         height: 16
       alignment: 0
@@ -627,8 +627,8 @@ TextureImporter:
       name: Area1_Tiles_14
       rect:
         serializedVersion: 2
-        x: 160
-        y: 144
+        x: 94
+        y: 56
         width: 16
         height: 16
       alignment: 0
@@ -942,8 +942,8 @@ TextureImporter:
       name: Area1_Tiles_29
       rect:
         serializedVersion: 2
-        x: 128
-        y: 112
+        x: 94
+        y: 56
         width: 16
         height: 16
       alignment: 0
@@ -984,8 +984,8 @@ TextureImporter:
       name: Area1_Tiles_31
       rect:
         serializedVersion: 2
-        x: 160
-        y: 112
+        x: 94
+        y: 56
         width: 16
         height: 16
       alignment: 0

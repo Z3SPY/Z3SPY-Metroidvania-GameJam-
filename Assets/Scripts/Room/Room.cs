@@ -4,21 +4,28 @@ using UnityEngine;
 
 public class Room : MonoBehaviour
 {
-    public GameObject virtualCam;
+    enum roomType {Room , Transition};   
+    [SerializeField] roomType RoomType = roomType.Room;
+
+    public GameObject virtualCam = null;
     public GameObject[] enemySpawnConatiner;
-    public GameObject mainCheckPoint;
+    //public GameObject mainCheckPoint;
 
 
     private void OnTriggerEnter2D(Collider2D other) {
         if (other.CompareTag("Player") && !other.isTrigger) {
             //Camera Handler
-            virtualCam.SetActive(true);
 
+            if ((RoomType == roomType.Room || RoomType == roomType.Transition) && virtualCam != null) {
+                virtualCam.SetActive(true);
+            } 
+
+                    
             //CheckPoint Handler
     
-            if (mainCheckPoint != null) {
+            /*if (mainCheckPoint != null) {
                 other.GetComponent<playerScript>().getCheckPoint(mainCheckPoint.transform);
-            }
+            }*/
         }
     }
 
@@ -26,6 +33,12 @@ public class Room : MonoBehaviour
 
     private void OnTriggerStay2D(Collider2D other) {
         if (other.CompareTag("Player") && !other.isTrigger ) {
+
+            if ((RoomType == roomType.Room || RoomType == roomType.Transition) && virtualCam != null) {
+                other.GetComponent<playerScript>().setCameraReference(virtualCam);
+            } 
+
+
             //Handles Enemy Spawn
             foreach (GameObject item in enemySpawnConatiner)
             {
@@ -38,6 +51,8 @@ public class Room : MonoBehaviour
     }
     private void OnTriggerExit2D(Collider2D other) {
         if (other.CompareTag("Player") && !other.isTrigger) {
+
+            if (virtualCam != null)
             virtualCam.SetActive(false);
 
             foreach (GameObject item in enemySpawnConatiner)

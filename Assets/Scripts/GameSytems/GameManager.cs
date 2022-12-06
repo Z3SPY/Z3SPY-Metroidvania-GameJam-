@@ -7,6 +7,8 @@ public class GameManager : MonoBehaviour
 
     #region singleton
     public static GameManager instance;
+    public bool plyrAlive = true;
+
     void Awake() {
         instance = this;
     }
@@ -17,10 +19,9 @@ public class GameManager : MonoBehaviour
 
     void Update()
     {
-        if (Input.GetKeyDown(KeyCode.R)) {
-            enemySpawnControl.instance.resetLife();
-        }
+        
     }
+    
 
     void FixedUpdate() {
         if (toastFloat <= 1f){ 
@@ -40,5 +41,17 @@ public class GameManager : MonoBehaviour
 
     public void increaseToast() {
         toastFloat += 0.01f;
+    }
+
+    public void ResetEnemies() {
+        enemySpawnControl.instance.resetLife();
+    }
+
+    public void playerDead() {
+        plyrAlive = false;
+    }
+
+    public void playerAlive() {
+        plyrAlive = true;
     }
 }

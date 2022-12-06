@@ -273,6 +273,8 @@ public class EnemyMovement_Rage : MonoBehaviour
 
     #region Rage 
         public void PlayerChase(float vX) {
+
+            Debug.Log("Raging");
             circleAttack.enabled = true;
 
             float dist = Vector2.Distance(this.transform.position, playerPos);  
