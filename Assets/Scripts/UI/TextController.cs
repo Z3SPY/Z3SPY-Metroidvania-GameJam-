@@ -19,6 +19,16 @@ public class TextController : MonoBehaviour
     void Start() {
     }
 
+    void Update() {
+        if (GameManager.instance.winGame == true) {
+            textEvent.color = Color.black;
+            textCommand.color = Color.black;
+        } else {
+            textEvent.color = Color.white;
+            textCommand.color = Color.white;
+        }
+    }
+
     public void SetText(string msgEvent, string msgCommand) {
         textEvent.text = msgEvent;
         textCommand.text = msgCommand;
@@ -26,9 +36,11 @@ public class TextController : MonoBehaviour
         PlayAnimation();
     }
 
+
+
     private void PlayAnimation() {
         anim.Play("text");
-
+        if (GameManager.instance.winGame == false)
         StartCoroutine(waitAnim());
 
     }

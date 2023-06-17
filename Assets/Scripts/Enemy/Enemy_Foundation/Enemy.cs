@@ -9,6 +9,8 @@ public class Enemy : MonoBehaviour
 
     [SerializeField] EnemyTakeDamage damageReference;
     [SerializeField] GameObject deathParticleObject;
+    [SerializeField] AudioSource enemyAudio;
+    public AudioClip deathClip;
 
     bool _isAlive = true;
     public bool _canMove = true;
@@ -20,11 +22,13 @@ public class Enemy : MonoBehaviour
 
     void Awake() {
         damageReference = GetComponent<EnemyTakeDamage>();
+        enemyAudio = GetComponent<AudioSource>();
         spawner = null;
     }
 
     public void setSpawner(GameObject sender) {
         spawner = sender.GetComponent<enemySpawnControl>();
+       
     }
 
     void Start()
@@ -58,6 +62,9 @@ public class Enemy : MonoBehaviour
             if (spawner != null) {
                 spawner.enemyDied();
             }
+            
+
+            AudioManager.instance.setAudioShot(deathClip, 1f);
         }
 
         public void Alive() {

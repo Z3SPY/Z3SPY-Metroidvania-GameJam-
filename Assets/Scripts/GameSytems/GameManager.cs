@@ -8,6 +8,9 @@ public class GameManager : MonoBehaviour
     #region singleton
     public static GameManager instance;
     public bool plyrAlive = true;
+    public bool winGame = false;
+    [SerializeField] Animator transitionAnimator;
+
 
     void Awake() {
         instance = this;
@@ -53,5 +56,16 @@ public class GameManager : MonoBehaviour
 
     public void playerAlive() {
         plyrAlive = true;
+    }
+
+    public void WinGame() {
+        winGame = true;
+        Invoke("TextWin", 5F);
+        transitionAnimator.Play("Win");
+        
+    }
+
+    void TextWin() {
+        TextController.instance.SetText("You Beat The Game", "Thank you for playing");
     }
 }

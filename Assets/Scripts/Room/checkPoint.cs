@@ -31,6 +31,11 @@ public class checkPoint : MonoBehaviour
                 } else if (checkType == checkPointType.DEATH) {
                     other.GetComponent<playerScript>().getMainCheckPoint(mainCheckPoint.transform);
                     other.GetComponent<playerScript>().getCheckPointObject(this.gameObject);
+
+                    other.GetComponent<playerScript>().jumpFix();
+                    
+
+
                     if (_activated == false) {
                         spark.Play();
                         _activated = true;

@@ -44,6 +44,7 @@ public class playerScript : MonoBehaviour
     float baseCastDist = 1f;
     [SerializeField] bool _canPressCrouch = true;
     [SerializeField] bool _isCrouching = false;
+    public bool wall = false;
 
     [Header ("JumpVal Settings")]
     [SerializeField] int jmpNum;
@@ -77,6 +78,10 @@ public class playerScript : MonoBehaviour
     public ParticleSystem healCharge;
     [SerializeField] TrailRenderer line;
 
+    [Header("Audio Settings")]
+    [SerializeField] AudioSource playerAudio; 
+    [SerializeField] List<AudioClip> audioClip;
+
     [Header ("Attack Settings")]
     [SerializeField] Transform attackOrigin;
     [SerializeField] Transform attackPos;
@@ -84,7 +89,7 @@ public class playerScript : MonoBehaviour
     bool _isShooting = false;
     
     float attackRadius = 4f;
-    [SerializeField] float attackDelay = .2f;
+    [SerializeField] float attackDelay = .5f;
     public int attackDmg = 1;
     
     [Header("Shoot")]
@@ -121,6 +126,7 @@ public class playerScript : MonoBehaviour
         if (attackPos == null) attackPos = GameObject.Find("AttackPoint").GetComponent<Transform>();
         if (srPlayer == null) srPlayer = GameObject.Find("Player_visual").GetComponent<SpriteRenderer>();
         if (animatorController == null) animatorController = this.GetComponent<playerAnimatorController>();
+        if (playerAudio == null) playerAudio = this.GetComponent<AudioSource>();
 
     }
 
@@ -135,69 +141,73 @@ public class playerScript : MonoBehaviour
     }
 
     void Update()
-    {       
+    {   
 
+        if (GameManager.instance.winGame == false) {
 
-        if (_obtainedDash == true) {
-            dashFunc();
-        }
+            wall = checkForWall();
+        
 
-        if (_obtainedCrouch == true) {
-            Crouch();
-        }
+            if (_obtainedDash == true) {
+                dashFunc();
+            }
 
-        if (_obtainedDoubleJump == true) {
-            maxJump = 2;
-        }
+            if (_obtainedCrouch == true) {
+                Crouch();
+            }
 
-    #region  Health and Shoot Logic
-        //Health
-        damageHandler();
+            if (_obtainedDoubleJump == true) {
+                maxJump = 2;
+            }
 
-        if (Input.GetKeyDown(KeyCode.K)) {
-            pressingHeal = true;
-                     
-        } 
+        #region  Health and Shoot Logic
+            //Health
+            damageHandler();
 
-        if (pressingHeal == true) {
-            healTime += Time.deltaTime;
-
-            if (GameManager.instance.toastFloat >= 1f) {
-                cameraFOV -= (int) (1);
-                cameraRef.GetComponent<CinemachineVirtualCamera>().m_Lens.FieldOfView = (100 <= cameraFOV) ? cameraFOV : 100;   
-                healCharge.Play();
+            if (Input.GetKeyDown(KeyCode.K)) {
+                pressingHeal = true;
+                        
             } 
-            
 
-            if (healTime >= 2.5) {
-                Heal();
+            if (pressingHeal == true) {
+                healTime += Time.deltaTime;
+
+                if (GameManager.instance.toastFloat >= 1f) {
+                    cameraFOV -= (int) (1);
+                    cameraRef.GetComponent<CinemachineVirtualCamera>().m_Lens.FieldOfView = (100 <= cameraFOV) ? cameraFOV : 100;   
+                    healCharge.Play();
+                } 
+                
+
+                if (healTime >= 2.5) {
+                    Heal();
+                    healTime = 0f;
+                }
+            }
+
+            if (Input.GetKeyUp(KeyCode.K)) {
+                if (healTime <= 0.75f && _obtainedShoot) {
+                    Shoot();
+                }
+                cameraRef.GetComponent<CinemachineVirtualCamera>().m_Lens.FieldOfView = cameraFOVMax;            
+                pressingHeal = false;
                 healTime = 0f;
             }
-        }
+            
+        #endregion
+        
+            if (autoWalkBool == true) {
+                autoWalk(walk);
+            } 
 
-        if (Input.GetKeyUp(KeyCode.K)) {
-            if (healTime <= 0.75f && _obtainedShoot) {
-                Shoot();
+            if (autoJumpBool == true && autoFallBool == false) {
+                autoJump();
             }
-            cameraRef.GetComponent<CinemachineVirtualCamera>().m_Lens.FieldOfView = cameraFOVMax;            
-            pressingHeal = false;
-            healTime = 0f;
-        }
-        
-    #endregion
-    
-        if (autoWalkBool == true) {
-            autoWalk(walk);
-        }
 
-        if (autoJumpBool == true && autoFallBool == false) {
-            autoJump();
+            jmpCheck();
+            Move();
+            
         }
-
-        jmpCheck();
-        Move();
-        
-        
 
     }
 
@@ -229,12 +239,18 @@ public class playerScript : MonoBehaviour
         x = Input.GetAxisRaw("Horizontal");
         y = Input.GetAxisRaw("Vertical");
 
-        if (_isDashing == false) {
+        if (_isDashing == false && _isCrouching == false) {
             playerHitBox.size = new Vector2(2.5f, 3.4f);
             playerHitBox.offset = new Vector2(-0.2f, -0.9f);
-        } else {
-            playerHitBox.size = new Vector2(2.5f, 2.3f);
-            playerHitBox.offset = new Vector2(-0.2f, -1.4f);
+        } else if (_isDashing == true) {
+
+            if (_isCrouching == false) {
+                 playerHitBox.size = new Vector2(2.5f, 3.023538f);
+                playerHitBox.offset = new Vector2(-0.2f, -1.088231f);
+            } else {
+                playerHitBox.size = new Vector2(2.5f, 2f);
+                playerHitBox.offset = new Vector2(-0.2f, -1.5f);
+            }
         }
 
 
@@ -297,25 +313,29 @@ public class playerScript : MonoBehaviour
                 
             }
 
-                
-            if (Input.GetKeyDown(KeyCode.Space) && _canJump) {
 
+             // if colliding with wall && _isCrouching == true    
+        if (checkForWall() == true) {
+
+            if (Input.GetKeyDown(KeyCode.Space) && _canJump) {
+                
                 if (Input.GetKey(KeyCode.S) == false && jmpNum > 0f) {
                     if (_isGrounded) 
                     Jump(1f);
                     else 
                     Jump(.75f);
+                    AudioManager.instance.setAudio(audioClip[0]);
                 }
 
-                
             }
 
             if (Input.GetKey(KeyCode.Space) && _pressedJump == true ) {
 
                 HoldJump();
-                
+
             }
 
+        }
 
             if (y == 1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 90); }
             if (y == -1) { attackOrigin.rotation = Quaternion.Euler(0, 0, 270); }
@@ -324,7 +344,9 @@ public class playerScript : MonoBehaviour
 
             if (Input.GetKeyDown(KeyCode.J)){
                 if (_canAttack) {
-                    attack();
+                    if (checkForWall() == true) {
+                        attack();
+                    }
                 }
             }
        
@@ -437,6 +459,7 @@ public class playerScript : MonoBehaviour
         playerHP -= dmg;
         _invulnerable = true;
         HealthController.instance.updateHealth(playerHP);
+        AudioManager.instance.setAudio(audioClip[2]);
 
 
         //Damage Events
@@ -488,6 +511,10 @@ public class playerScript : MonoBehaviour
 
     void attack() {
         _canAttack = false;
+
+        playerAudio.PlayOneShot(audioClip[1], 1f);
+        
+        
 
         foreach ( Collider2D collider in Physics2D.OverlapCircleAll(attackPos.position, attackRadius))
         {
@@ -630,7 +657,7 @@ public class playerScript : MonoBehaviour
 
                 float dashX = (_isGrounded == true) ? prevX * 1.2f : prevX;
 
-                
+                    
                 _dashingDir = new Vector2(dashX, 0f);
 
                 if (_dashingDir == Vector2.zero) {
@@ -640,6 +667,7 @@ public class playerScript : MonoBehaviour
                 //Add Stopping Dash
                 StartCoroutine(stopDashing());
             }
+            
 
             if (_isDashing) {
                 line.emitting = true;
@@ -755,6 +783,11 @@ public class playerScript : MonoBehaviour
         }
     #endregion
 #endregion
+
+
+    public void jumpFix() {
+        _canJump = true;
+    }
 
 
 

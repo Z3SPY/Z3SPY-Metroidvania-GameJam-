@@ -1341,9 +1341,9 @@ TextureImporter:
       name: Side_Pipe2
       rect:
         serializedVersion: 2
-        x: 160
+        x: 165
         y: 64
-        width: 16
+        width: 7
         height: 16
       alignment: 0
       pivot: {x: 0.5, y: 0.5}
@@ -1446,12 +1446,12 @@ TextureImporter:
       name: Side_Pipe3
       rect:
         serializedVersion: 2
-        x: 160
+        x: 161
         y: 32
         width: 16
         height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 9
+      pivot: {x: 0.47, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []
@@ -1506,36 +1506,15 @@ TextureImporter:
       edges: []
       weights: []
     - serializedVersion: 2
-      name: Area1_Tiles_70
-      rect:
-        serializedVersion: 2
-        x: 151
-        y: 16
-        width: 9
-        height: 11
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
-      border: {x: 7, y: 0, z: 0, w: 0}
-      outline: []
-      physicsShape: []
-      tessellationDetail: 0
-      bones: []
-      spriteID: de16f84de0a81baf0800000000000000
-      internalID: -382372697049439763
-      vertices: []
-      indices: 
-      edges: []
-      weights: []
-    - serializedVersion: 2
       name: Side_Pipe4
       rect:
         serializedVersion: 2
-        x: 160
+        x: 161
         y: 16
         width: 16
         height: 16
-      alignment: 0
-      pivot: {x: 0.5, y: 0.5}
+      alignment: 9
+      pivot: {x: 0.47, y: 0.5}
       border: {x: 0, y: 0, z: 0, w: 0}
       outline: []
       physicsShape: []

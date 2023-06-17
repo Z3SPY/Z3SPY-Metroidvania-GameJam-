@@ -27,8 +27,9 @@ public class Collectible : MonoBehaviour
 
     void OnTriggerEnter2D(Collider2D other) {
         if (other.CompareTag("Player")) {
-            this.gameObject.SetActive(false);
-
+            
+            sr.sprite = null;
+            Invoke("waitForCollect", 1f);
             switch (msgEvent)
             {
                 case "OBTAINED DASH":
@@ -36,6 +37,9 @@ public class Collectible : MonoBehaviour
                     break;
                 case "OBTAINED DOUBLE JUMP":
                     other.GetComponent<playerScript>()._obtainedDoubleJump = true;
+                    break;
+                case "OBTAINED TRANSFORM":
+                    other.GetComponent<playerScript>()._obtainedCrouch = true;
                     break;
                 default:
                     break;
@@ -49,6 +53,10 @@ public class Collectible : MonoBehaviour
             //Calls Set Text
             TextController.instance.SetText(msgEvent, msgCommand);
         }
+    }
+
+    public void waitForCollect() {
+        this.gameObject.SetActive(false);
     }
     
 

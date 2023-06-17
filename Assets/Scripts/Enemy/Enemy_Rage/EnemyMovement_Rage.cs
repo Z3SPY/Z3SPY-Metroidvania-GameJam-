@@ -38,6 +38,7 @@ public class EnemyMovement_Rage : MonoBehaviour
     //Reference to Enemy
     Enemy enemyReference; 
     GameObject Player;
+    [SerializeField] Animator anim; 
 
 
     Vector3 baseScale;
@@ -62,9 +63,13 @@ public class EnemyMovement_Rage : MonoBehaviour
 
         if (enemyState == State.RAGE) {
             moveSpeed = 15f;
+            anim.Play("Enemy_Rage");
         } else {
             moveSpeed = 5f;
+            anim.Play("Enemy_Rage_Walk");
         }
+
+        
     }
 
      void FixedUpdate() {
@@ -107,7 +112,15 @@ public class EnemyMovement_Rage : MonoBehaviour
             
 
         // Player Detection
-        if ((isDetectingPlayer() == true ||  checkBehind() == true) && enemyState == State.PATROL) {
+        if ((isDetectingPlayer() == true || checkBehind() == true) && enemyState == State.PATROL) {
+
+            if (checkBehind() == true) {
+                if (facingDirection == LEFT) {
+                    ChangeFacingDirection(RIGHT);
+                } else if (facingDirection == RIGHT) {
+                    ChangeFacingDirection(LEFT);
+                }
+            }
             if (_canRage == true) {
                 enemyState = State.ALERT;
             }
